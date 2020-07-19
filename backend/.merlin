@@ -6,3 +6,4 @@ PKG lwt
 PKG cohttp
 PKG cohttp-lwt-unix
 PKG mtime
+PKG mysql
