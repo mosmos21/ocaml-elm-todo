@@ -4,16 +4,26 @@ open Cohttp
 open Cohttp_lwt_unix
 
 module DbUtil = struct
-  let connect_with_tcp () = 
+  let dbd = 
+    let int_opt_of_string_opt = function
+      | Some i -> Some (int_of_string i)
+      | None -> None
+    in
+    let env = Sys.getenv_opt "ENVIRONMENT" in
+    let options = if env = Some "production" then [Mysql.OPT_PROTOCOL Mysql.PROTOCOL_TCP] else [] in
     Mysql.connect 
-      ~options:[Mysql.OPT_PROTOCOL Mysql.PROTOCOL_TCP] 
-      { dbhost   = Some "localhost"
-      ;	dbname   = Some "todo_app"
-      ; dbport   = Some 3306
-      ; dbpwd    = Some "password"
-      ; dbuser   = Some "todo_user"
-      ;	dbsocket = None
+      ~options
+      { dbhost   = Sys.getenv_opt "DB_HOST"
+      ; dbname   = Sys.getenv_opt "DB_NAME"
+      ; dbport   = Sys.getenv_opt "DB_PORT" |> int_opt_of_string_opt
+      ; dbpwd    = Sys.getenv_opt "DB_PASSWORD"
+      ; dbuser   = Sys.getenv_opt "DB_USER"
+      ; dbsocket = Sys.getenv_opt "DB_SOCKET_PATH"
       }
+  
+  let exec query = 
+    Logs.info (fun m -> m "[EXEC QUERY] %s" query);
+    Mysql.exec dbd query
 
   let parse_rows row_parser result =
     let col = Mysql.column result in
@@ -22,12 +32,6 @@ module DbUtil = struct
       | Some x -> row_parser col x :: loop (Mysql.fetch result)
     in
     loop (Mysql.fetch result) 
-
-  let dbd = connect_with_tcp ()
-  
-  let exec query = 
-    Logs.info (fun m -> m "[EXEC QUERY] %s" query);
-    Mysql.exec dbd query
 end
 
 module Todo = struct
@@ -176,6 +180,12 @@ let server =
   Server.create ~mode:(`TCP (`Port 8000)) (Server.make ~callback ())
 
 let () = 
+  let env = Sys.getenv_opt "ENVIRONMENT" in
+  let log_level = match env with
+    | Some "production" -> Logs.Info
+    | _ -> Logs.Debug in
   Logs.set_reporter (Logs.format_reporter ());
-  Logs.set_level (Some Logs.Info);
+  Logs.set_level (Some log_level);
+  Logs.debug (fun m -> m "Debug Log");
+  Logs.info (fun m -> m "Info Log");
   Lwt_main.run server
