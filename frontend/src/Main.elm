@@ -28,11 +28,17 @@ type RequestStatus
     | FAILED
 
 
+type TodoStatus
+    = NOT_START
+    | IN_PROGRESS
+    | COMPLETE
+
+
 type alias Todo =
     { id : Int
     , title : String
     , content : String
-    , status : Int
+    , status : TodoStatus
     , created_at : String
     , updated_at : String
     }
@@ -158,7 +164,7 @@ todoCard todo =
         , style "border" "1px solid gray"
         , style "padding" "8px"
         ]
-        [ h3 [] [ text (todo.title ++ " [" ++ statusFromInt todo.status ++ "]") ]
+        [ h3 [] [ text (todo.title ++ " [" ++ statusToString todo.status ++ "]") ]
         , p [] [ text todo.content ]
         , div []
             [ span
@@ -168,27 +174,28 @@ todoCard todo =
                 [ text ("created_at: " ++ todo.created_at ++ " / updated_at: " ++ todo.updated_at)
                 ]
             ]
-        , if todo.status == 0 then
-            button [ onClick (StartTodo todo.id 1) ] [ text "Start" ]
+        , case todo.status of
+            NOT_START ->
+                button [ onClick (StartTodo todo.id 1) ] [ text "Start" ]
 
-          else if todo.status == 1 then
-            button [ onClick (StartTodo todo.id 2) ] [ text "Complete" ]
+            IN_PROGRESS ->
+                button [ onClick (StartTodo todo.id 2) ] [ text "Complete" ]
 
-          else
-            span [] []
+            COMPLETE ->
+                span [] []
         ]
 
 
-statusFromInt : Int -> String
-statusFromInt num =
-    case num of
-        0 ->
-            "NOT_STARRT"
+statusToString : TodoStatus -> String
+statusToString s =
+    case s of
+        NOT_START ->
+            "NOT_START"
 
-        1 ->
-            "IN PROGRESS"
+        IN_PROGRESS ->
+            "IN_PROGRESS"
 
-        _ ->
+        COMPLETE ->
             "COMPLETE"
 
 
@@ -243,6 +250,32 @@ todoDecoder =
         (JD.field "id" JD.int)
         (JD.field "title" JD.string)
         (JD.field "content" JD.string)
-        (JD.field "status" JD.int)
+        (JD.field "status" JD.int
+            |> JD.andThen
+                (\i ->
+                    case statusFromInt i of
+                        Just a ->
+                            JD.succeed a
+
+                        Nothing ->
+                            JD.fail "invalid todo status"
+                )
+        )
         (JD.field "created_at" JD.string)
         (JD.field "updated_at" JD.string)
+
+
+statusFromInt : Int -> Maybe TodoStatus
+statusFromInt i =
+    case i of
+        0 ->
+            Just NOT_START
+
+        1 ->
+            Just IN_PROGRESS
+
+        2 ->
+            Just COMPLETE
+
+        _ ->
+            Nothing
