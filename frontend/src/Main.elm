@@ -130,8 +130,9 @@ view model =
                 [ textInput "title" "Title" ChangeTitle
                 , textInput "content" "Content" ChangeContent
                 , button
-                    [ style "margin" "8px auto"
-                    , style "width" "90%"
+                    [ style "margin" "16px auto"
+                    , style "width" "100%"
+                    , style "padding" "8px"
                     , onClick ClickSubmit
                     ]
                     [ text "Submit" ]
@@ -144,7 +145,7 @@ view model =
 
 textInput : String -> String -> (String -> msg) -> Html msg
 textInput i lbl inputMsg =
-    div []
+    div [ style "margin" "8px 0"]
         [ label [ for i ] [ text lbl ]
         , input
             [ id i
@@ -163,6 +164,7 @@ todoCard todo =
         [ style "margin" "16px 0"
         , style "border" "1px solid gray"
         , style "padding" "8px"
+        , style "text-align" "center"
         ]
         [ h3 [] [ text (todo.title ++ " [" ++ statusToString todo.status ++ "]") ]
         , p [] [ text todo.content ]

@@ -1,3 +1,10 @@
 _build/
+build/
+node_modules/
+elm-stuff/
+
+repl-temp-*
 
 .env
+.DS_Store
+frontend/assets/index.js
