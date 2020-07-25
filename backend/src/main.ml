@@ -115,10 +115,6 @@ module EchoHandler = struct
 end
 
 module TodoHandler = struct
-  let string_of_todo = function
-    | None -> ""
-    | Some (todo: Todo.t) -> Printf.sprintf "[id: %d] %s - %s" todo.id todo.title todo.content
-
   let get_todos () =
     let todos = TodoRepository.select_todos () |> Todo.json_of_todos in
     let body = Yojson.Basic.pretty_to_string todos in
@@ -127,7 +123,8 @@ module TodoHandler = struct
   let get_todo id =
     match TodoRepository.select_todo id with
       | None -> Server.respond_not_found ()
-      | todo -> Server.respond_string ~status:`OK ~body:(string_of_todo todo) ()
+      | Some todo -> let body = todo |> Todo.json_of_todo |> Yojson.Basic.pretty_to_string in
+         Server.respond_string ~status:`OK ~body ()
 
   let create_todo body = Cohttp_lwt.Body.to_string body 
     >|= begin fun body ->
