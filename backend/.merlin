@@ -5,7 +5,6 @@ PKG logs
 PKG lwt
 PKG cohttp
 PKG cohttp-lwt-unix
-PKG mtime
 PKG mysql
 PKG routes
 PKG yojson

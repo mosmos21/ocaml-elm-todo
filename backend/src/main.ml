@@ -167,7 +167,7 @@ let routes body =
     | _ -> one_of []
 
 let server =
-  let callback conn req body =
+  let callback _ req body =
     let target = Uri.path @@ Cohttp.Request.uri req in
     let meth = Request.meth req in
     match Routes.match' (routes body meth) ~target with
